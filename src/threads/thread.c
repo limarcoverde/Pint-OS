@@ -28,7 +28,7 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
-/* find it out */
+/* List of blocked processes.*/
 static struct list blocked_list;
 
 /* Idle thread. */
@@ -97,7 +97,6 @@ thread_init (void)
   list_init (&all_list);
   list_init (&blocked_list);
 
-  /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
@@ -107,6 +106,7 @@ thread_init (void)
 void 
 thread_sleep(int64_t ticks)
 {
+
   enum intr_level old_level;
   ASSERT (!intr_context ());
   old_level = intr_disable ();
@@ -114,10 +114,12 @@ thread_sleep(int64_t ticks)
   struct thread * current_thread = thread_current ();
 
   if (current_thread != idle_thread){
+
     current_thread->status = THREAD_BLOCKED;
     current_thread->ticks_definidos = timer_ticks () + ticks;
     list_push_back(&blocked_list, &current_thread->elem);
     schedule ();
+
   }
 }
 
@@ -132,7 +134,6 @@ thread_wakeup (void)
   for (e = list_begin (&blocked_list); e != list_end (&blocked_list); e = list_next (e))
   {
     struct thread *t = list_entry (e, struct thread, elem);
-
     if (t->ticks_definidos <= timer_ticks ()){
       atualizado = list_remove (e);
       t->status = THREAD_READY;
